@@ -7,37 +7,32 @@
 //
 
 import UIKit
-import Alamofire
+import RxSwift
+import RxCocoa
+import RxAlamofire
 
 class ViewController: UIViewController {
+    
+    let disposeBag = DisposeBag()
 
+    @IBOutlet weak var contentTableView: UITableView!
+    @IBOutlet weak var tableView: UITableView!
     override func viewDidLoad() {
         super.viewDidLoad()
+        // Do any additional setup after loading the view, typically from a nib.
         
-        Alamofire.request(.GET, "https://rxswift.leanapp.cn/users").responseJSON { response in
-            switch response.result {
-            case .Success(let value):
-                print("Result: \(value)")
-                
-                Alamofire.request(.GET, "https://rxswift.leanapp.cn/users").responseJSON { response in
-                    switch response.result {
-                    case .Success(let value):
-                        print("Result: \(value)")
-                    case .Failure(let error):
-                        print("Error: \(error)")
-                    }
-                    
-                }
-            case .Failure(let error):
-                print("Error: \(error)")
+        requestJSON(.GET, "https://rxswift.leanapp.cn/users")
+            .flatMap { result -> Observable<(NSHTTPURLResponse, AnyObject)> in
+                print("Result: \(result.1)")
+                return requestJSON(.GET, "https://rxswift.leanapp.cn/users")
             }
-        }
-        /**
-        *  1. 可能还需要 JSON -> Model 的解析，可能我们在这里会做一下封装，但这其实和继承有些类似。都是依赖于之前的代码
-        *  进行添加，嵌套，都是一种嵌套的感觉。
-        *  2. 可能还有重复请求的需求，请求失败再请求一两次之类的。
-        */
+            .subscribe(onNext: {
+                print("Result: \($0.1)")
+                }, onError: {
+                print("Error: \($0)")
+                })
+            .addDisposableTo(disposeBag)
+        
     }
 
 }
-

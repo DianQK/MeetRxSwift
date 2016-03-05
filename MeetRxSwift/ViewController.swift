@@ -15,6 +15,7 @@ typealias CellModel = (name: String, state: String)
 /// delegate Selector KVO
 class ViewController: UIViewController {
     
+    @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var textField: UITextField!
     
     @IBOutlet weak var resultLabel: UILabel!
@@ -27,61 +28,52 @@ class ViewController: UIViewController {
         CellModel(name: "小锅", state: "Single"),
         CellModel(name: "小锅", state: "Single"),
         CellModel(name: "小锅", state: "Single"),
-        CellModel(name: "小青", state: "Single"),
-        CellModel(name: "小青", state: "Single"),
-        CellModel(name: "小青", state: "Single")
+        CellModel(name: "小锅", state: "Single"),
+        CellModel(name: "小锅", state: "Single"),
+        CellModel(name: "小锅", state: "Single")
     ]
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        textField.addTarget(self, action: "updateResultLabel:", forControlEvents: .EditingChanged)
+        /// 绑定结果
+        textField.rx_text
+            .bindTo(resultLabel.rx_text)
+            .addDisposableTo(disposeBag)
         
-        tableView.dataSource = self
-        tableView.delegate = self
+        let dataSource = Variable([CellModel]())
         
-        resultLabel.addObserver(self, forKeyPath: "text", options: .New, context: nil)
-    }
-    
-    func updateResultLabel(textField: UITextField) {
-        resultLabel.text = textField.text
-    }
-    
-    override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        if let label = object as? UILabel where keyPath == "text" {
-            print(label.text)
-        } else {
-            super.observeValueForKeyPath(keyPath, ofObject: object, change: change, context: context)
-        }
-    }
-    
-    deinit {
-        resultLabel.removeObserver(self, forKeyPath: "text")
-    }
-
-}
-
-extension ViewController: UITableViewDataSource, UITableViewDelegate {
-
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return initialValue.count
-    }
-
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("SwiftGGCell", forIndexPath: indexPath)
+        /// 数据绑定到 Cell
+        dataSource.asObservable()
+            .bindTo(tableView.rx_itemsWithCellIdentifier("SwiftGGCell")) { (_, element, cell) in
+                cell.textLabel?.text = element.name
+                cell.detailTextLabel?.text = element.state
+            }
+            .addDisposableTo(disposeBag)
         
-        cell.textLabel?.text = initialValue[indexPath.row].name
-        cell.detailTextLabel?.text = initialValue[indexPath.row].state
+        /// Cell 点击处理
+        tableView.rx_modelDeselected(CellModel)
+            .subscribeNext {
+                print($0)
+            }
+            .addDisposableTo(disposeBag)
         
-        return cell
+        /// 观察 tableView contentOffset 的变化
+        tableView.rx_contentOffset
+            .subscribeNext {
+                print($0)
+            }
+            .addDisposableTo(disposeBag)
+        
+        /// 添加数据
+        dataSource.value.appendContentsOf(initialValue)
+        
+        /// KVO
+        resultLabel.rx_observe(String.self, "text")
+            .subscribeNext {
+                print($0)
+            }
+            .addDisposableTo(disposeBag)
     }
 
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        print("Click")
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
-    }
-    
-    func scrollViewDidScroll(scrollView: UIScrollView) {
-        print(scrollView.contentOffset)
-    }
 }

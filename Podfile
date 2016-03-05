@@ -25,10 +25,14 @@ pod 'ObjectMapper'
 end
 
 target 'MeetRxSwift' do
-rx_pods
+    rx_pods
 end
 
 target 'MeetRxSwiftAsync' do
     rx_pods
     net_pods
+end
+
+target 'MultiButtonTutorial' do
+    rx_pods
 end
