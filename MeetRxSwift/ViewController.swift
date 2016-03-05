@@ -27,9 +27,9 @@ class ViewController: UIViewController {
         CellModel(name: "小锅", state: "Single"),
         CellModel(name: "小锅", state: "Single"),
         CellModel(name: "小锅", state: "Single"),
-        CellModel(name: "小锅", state: "Single"),
-        CellModel(name: "小锅", state: "Single"),
-        CellModel(name: "小锅", state: "Single")
+        CellModel(name: "小青", state: "Single"),
+        CellModel(name: "小青", state: "Single"),
+        CellModel(name: "小青", state: "Single")
     ]
     
     override func viewDidLoad() {
